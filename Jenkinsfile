@@ -1,28 +1,41 @@
 pipeline {
-    agent { label "dev-server" }
-    stages{
-        stage("Clone Code"){
+    agent any
+    stages {
+        stage("Pull Code"){
             steps{
-                git url: "https://github.com/LondheShubham153/node-todo-cicd.git", branch: "master"
+                git url: "https://github.com/Ajay-Kumar-123/node-todo-cicd.git", branch: "master"
+                echo "Pulling code from Github"
             }
         }
-        stage("Build and Test"){
+        
+        stage("Build and Test Stage"){
             steps{
-                sh "docker build . -t node-app-test-new"
+                sh "docker build -t node-app-test-new ."
+                echo "Building and Testing the application" 
             }
         }
-        stage("Push to Docker Hub"){
+        
+        stage("Scan Image"){
             steps{
-                withCredentials([usernamePassword(credentialsId:"dockerHub",passwordVariable:"dockerHubPass",usernameVariable:"dockerHubUser")]){
-                sh "docker tag node-app-test-new ${env.dockerHubUser}/node-app-test-new:latest"
-                sh "docker login -u ${env.dockerHubUser} -p ${env.dockerHubPass}"
-                sh "docker push ${env.dockerHubUser}/node-app-test-new:latest"
+                echo "Scan the Docker image for vulnerabilities"
+            }
+        }
+        
+        stage("Push latest Docker image to Dockerhub"){
+            steps{
+                withCredentials([usernamePassword(credentialsId:"dockerhub",passwordVariable:"dockerhubPass",usernameVariable:"dockerhubUser")]){
+                sh "docker login -u ${env.dockerhubUser} -p ${env.dockerhubPass}"
+                sh "docker tag node-app-test-new:latest ${env.dockerhubUser}/node-app-test-new:latest"
+                sh "docker push ${env.dockerhubUser}/node-app-test-new:latest"
+                echo "Pushed Docker image to Dockerhub"
                 }
             }
         }
-        stage("Deploy"){
+        
+        stage("Deploy the application"){
             steps{
                 sh "docker-compose down && docker-compose up -d"
+                echo "Deployed the application"
             }
         }
     }
