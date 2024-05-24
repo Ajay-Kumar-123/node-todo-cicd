@@ -17,7 +17,11 @@ pipeline {
         
         stage("Scan Image"){
             steps{
+                withCredentials([usernamePassword(credentialsId:"dockerhub",passwordVariable:"dockerhubPass",usernameVariable:"dockerhubUser")]){
+                sh "docker login -u ${env.dockerhubUser} -p ${env.dockerhubPass}"
                 echo "Scan the Docker image for vulnerabilities"
+                sh "trivy image ${env.dockerhubUser}/node-app-test-new:latest --scanners vuln"
+                }
             }
         }
         
